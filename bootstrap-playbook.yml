@@ -1,0 +1,10 @@
+- name: Stand up Minikube cluster with ArgoCD, Prometheus, and Grafana
+  hosts: localhost
+  gather_facts: false
+  become: false
+
+  roles:
+    - minikube
+    - dependencies
+    - argocd
+    - ingress

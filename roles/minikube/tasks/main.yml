@@ -1,0 +1,7 @@
+---
+# tasks file for minikube
+- name: Start Minikube cluster (if needed)
+  ansible.builtin.command: minikube start --profile argocd-system
+
+- name: Enable Ingress Addon for Minikube ArgoCD System
+  ansible.builtin.command: minikube --profile argocd-system addons enable ingress

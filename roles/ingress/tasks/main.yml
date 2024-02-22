@@ -1,0 +1,5 @@
+---
+# tasks file for ingress
+- name: Apply Argocd Ingres-Nginx
+  kubernetes.core.k8s:
+    src: ingress-manifests.yml

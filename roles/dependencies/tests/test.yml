@@ -1,0 +1,6 @@
+---
+- name: Test dependencies installation
+  hosts: localhost
+  remote_user: root
+  roles:
+    - dependencies

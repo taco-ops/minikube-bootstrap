@@ -1,0 +1,62 @@
+---
+# tasks file for argocd
+- name: Get Helm repository list
+  ansible.builtin.command: helm repo list
+  register: helm_repo_list
+
+- name: Add ArgoCD Helm repository (idempotent)
+  kubernetes.core.helm:
+    name: argocd
+    chart_url: https://argoproj.github.io/argo-helm
+    release_namespace: argocd
+    state: present  # Ensures the repo is added
+  when: helm_repo_list.stdout.find('argo') == -1  # Additional check for consistency
+
+
+- name: Create ArgoCD Namespace (idempotent)
+  kubernetes.core.k8s:
+    kind: Namespace
+    name: argocd
+    state: present  # Ensures the namespace is created
+
+- name: Get Helm resource list
+  ansible.builtin.command: helm list
+  register: helm_list
+
+- name: Install ArgoCD via Helm (idempotent)
+  kubernetes.core.helm:
+    name: argocd
+    chart_ref: "argo-cd"
+    chart_repo_url: 'https://argoproj.github.io/argo-helm'
+    namespace: argocd
+    state: present
+  when: helm_list.stdout.find('argocd') == -1
+
+
+
+- name: Wait for argocd-initial-admin-secret to exist
+  kubernetes.core.k8s_info:
+    kind: Secret
+    namespace: argocd
+    name: argocd-initial-admin-secret
+    wait: true
+    wait_sleep: 10
+    wait_timeout: 600
+  register: secret_password
+
+- name: Debug secret_password
+  ansible.builtin.debug:
+    var: secret_password
+
+- name: Decode password (if secret exists)
+  when: secret_password.resources|length > 0
+  ansible.builtin.set_fact:
+    decoded_password: "{{ secret_password.resources[0].data['password'] | b64decode }}"
+
+- name: Overwrite password in .env file
+  ansible.builtin.lineinfile:
+    path: .env
+    regexp: '^ARGOCD_PASSWORD='  # Match the existing line starting with ARGOCD_PASSWORD=
+    line: ARGOCD_PASSWORD={{ decoded_password }}
+    create: true
+    state: present

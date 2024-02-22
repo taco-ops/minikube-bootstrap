@@ -1,0 +1,23 @@
+---
+# tasks file for dependencies
+- name: Check if kubectl is installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/kubectl
+  register: kubectl_check
+
+- name: Install kubectl (using get_url)
+  ansible.builtin.get_url:
+    url: https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+    dest: /usr/local/bin/kubectl
+    mode: '0755'  # Set executable permissions
+  when: not kubectl_check.stat.exists
+
+
+- name: Check if Helm is installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/helm
+  register: helm_check
+
+- name: Install Helm
+  ansible.builtin.command: curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+  when: not helm_check.stat.exists

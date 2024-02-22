@@ -1,0 +1,6 @@
+---
+- name: Test installing ArgoCD
+  hosts: localhost
+  remote_user: root
+  roles:
+    - argocd
